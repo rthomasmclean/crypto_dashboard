@@ -39,6 +39,10 @@ class table:
             else:
                 min_exchange = np.nan
             cols = ["Max Yield", "Max Yield Exchange", "Min Cost", "Min Cost Exchange"]
+            if (np.isnan(max_yield) == False):
+                max_yield = max_yield.astype(str) + "%"
+            if (np.isnan(min_cost) == False):
+                min_cost = min_cost.astype(str) + "%"
             data = [max_yield, max_exchange, min_cost, min_exchange]
             spreads[key] = pd.DataFrame([data], columns=cols)
         return spreads

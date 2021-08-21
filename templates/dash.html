@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" type= "text/css" href= "{{ url_for('static',filename='styles/style.css') }}">
+    <title>Yield Dashboard</title>
+</head>
+
+<body>
+    <h1>Dashboard</h1>
+    <table cellspacing='0'>
+        <tr>
+            <th>Assets</th>
+            <th>Max Yield</th>
+            <th>Min Cost</th>
+        </tr>
+    {% for asset in assets %}
+        <tr>
+            <td class="asset_format" rowspan="2">{{asset}}</td>
+            <td>{{data[asset]["Max Yield"][0]}}</td>
+            <td>{{data[asset]["Min Cost"][0]}}</td>
+        </tr>
+        <tr class="exchange_spec">
+            <td class="bottom">{{data[asset]["Max Yield Exchange"][0]}}</td>
+            <td class="bottom">{{data[asset]["Min Cost Exchange"][0]}}</td>
+        </tr>
+    {% endfor %}
+    </table>
+</body>
+</html>

@@ -1,15 +1,21 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, jsonify
 import exchanges
 import time
 
 app = Flask(__name__)
 
 exchange_urls = {
-    "Aave": "https://aave.com/",
+    "Aave": "https://aave.com",
     "Compound": "https://compound.finance/markets",
     "Solfarm": "https://solfarm.io/lend",
     "Mango Markets": "https://trade.mango.markets/stats"
 }
+
+@app.route("/update_dashboard", methods=["POST"])
+def updatedash():
+    launch_drivers()
+    spreads = exchanges.get_spreads()
+    return jsonify("", render_template("update_dash.html", assets=exchanges.get_dict().keys(), data=spreads, urls=exchange_urls))
 
 @app.route("/")
 def home():
@@ -21,9 +27,6 @@ def launch_drivers():
     exchanges.launch_solfarm()
     exchanges.launch_mangomarkets()
 
-def main():
-    launch_drivers()
 
-if __name__ == "__main__":
-    main()
-    app.run()
+launch_drivers()
+app.run()

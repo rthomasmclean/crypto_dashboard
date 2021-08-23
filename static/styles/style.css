@@ -1,3 +1,7 @@
+body {
+  background-color: #a9a9a9;
+}
+
 h1 {
   text-align: center;
 }
@@ -11,19 +15,22 @@ table {
 
 table th {
 	padding:21px 25px 22px 25px;
-	border-top:1px solid #e0e0e0;
-	border-bottom:1px solid #e0e0e0;
+	/* border-top:1px solid #e0e0e0;
+	border-bottom:1px solid #e0e0e0; */
   font-size:x-large;
+  background-color: #89ABE3FF;
+  color: #FCF6F5FF;
 }
 
 table td {
 	padding:10px;
 	text-align:center;
+  background-color: white;
 }
 
 td.asset_format {
   font-size:large;
-	border-bottom:1px solid #fafafa;
+	border-bottom:1px solid #e0e0e0;
 }
 
 tr.exchange_spec {
@@ -32,5 +39,5 @@ tr.exchange_spec {
 }
 
 td.bottom {
-	border-bottom:1px solid #fafafa;
+	border-bottom:1px solid #e0e0e0;
 }

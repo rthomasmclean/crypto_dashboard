@@ -5,7 +5,7 @@
         $(function(){
             window.setInterval(function(){
                 loadNewDash()
-            }, 100000)
+            }, 600000)
         
             function loadNewDash(){
                 $.ajax({
@@ -20,17 +20,18 @@
         }); 
     </script>
     <link rel="stylesheet" type= "text/css" href= "{{ url_for('static',filename='styles/style.css') }}">
-    <title>Yield Dashboard</title>
+    <title>Trading Dashboard</title>
 </head>
 
 <body>
-    <h1>Dashboard</h1>
+    <h1>Asset Yield Aggregator</h1>
     <table cellspacing='0'>
         <thead>
             <tr>
                 <th>Assets</th>
                 <th>Max Yield</th>
                 <th>Min Cost</th>
+                <th>Spread</th>
             </tr>
         </thead>
         <tbody id="dash_refresh">
@@ -39,10 +40,18 @@
                 <td class="asset_format" rowspan="2">{{asset}}</td>
                 <td>{{data[asset]["Max Yield"][0]}}</td>
                 <td>{{data[asset]["Min Cost"][0]}}</td>
+                {% if data[asset]["Color"][0] == "G" %}
+                    <td style="color: Green">{{data[asset]["Spread"][0]}}</td>
+                {% elif data[asset]["Color"][0] == "R" %}
+                    <td style="color: Red">{{data[asset]["Spread"][0]}}</td>
+                {% else %}
+                <td>{{data[asset]["Spread"][0]}}</td>
+                {% endif %}
             </tr>
             <tr class="exchange_spec">
                 <td class="bottom"><a href={{urls[data[asset]["Max Yield Exchange"][0]]}}>{{data[asset]["Max Yield Exchange"][0]}}</a></td>
                 <td class="bottom"><a href={{urls[data[asset]["Min Cost Exchange"][0]]}}>{{data[asset]["Min Cost Exchange"][0]}}</a></td>
+                <td class="bottom"></td>
             </tr>
         {% endfor %}
         </tbody>

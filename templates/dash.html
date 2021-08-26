@@ -37,20 +37,20 @@
         <tbody id="dash_refresh">
         {% for asset in assets %}
             <tr>
-                <td class="asset_format" rowspan="2">{{asset}}</td>
-                <td>{{data[asset]["Max Yield"][0]}}</td>
-                <td>{{data[asset]["Min Cost"][0]}}</td>
+                <td class="asset_format" rowspan="2">{{ asset }}</td>
+                <td>{{ data[asset]["Max Yield"][0] }}</td>
+                <td>{{ data[asset]["Min Cost"][0] }}</td>
                 {% if data[asset]["Color"][0] == "G" %}
-                    <td style="color: Green">{{data[asset]["Spread"][0]}}</td>
+                    <td style="color: Green">{{ data[asset]["Spread"][0] }}</td>
                 {% elif data[asset]["Color"][0] == "R" %}
-                    <td style="color: Red">{{data[asset]["Spread"][0]}}</td>
+                    <td style="color: Red">{{ data[asset]["Spread"][0] }}</td>
                 {% else %}
-                <td>{{data[asset]["Spread"][0]}}</td>
+                <td>{{ data[asset]["Spread"][0] }}</td>
                 {% endif %}
             </tr>
             <tr class="exchange_spec">
-                <td class="bottom"><a href={{urls[data[asset]["Max Yield Exchange"][0]]}}>{{data[asset]["Max Yield Exchange"][0]}}</a></td>
-                <td class="bottom"><a href={{urls[data[asset]["Min Cost Exchange"][0]]}}>{{data[asset]["Min Cost Exchange"][0]}}</a></td>
+                <td class="bottom"><a href={{ urls[data[asset]["Max Yield Exchange"][0]] }}>{{ data[asset]["Max Yield Exchange"][0] }}</a></td>
+                <td class="bottom"><a href={{ urls[data[asset]["Min Cost Exchange"][0]] }}>{{ data[asset]["Min Cost Exchange"][0] }}</a></td>
                 <td class="bottom"></td>
             </tr>
         {% endfor %}

@@ -12,7 +12,8 @@ exchange_urls = {
     "C.R.E.A.M.": "https://app.cream.finance",
     "Vesper": "https://vesper.finance",
     "88mph": "https://88mph.app",
-    "Solend": "https://solend.fi/dashboard"
+    "Solend": "https://solend.fi/dashboard",
+    "Fulcrum": "https://fulcrum.trade"
 }
 
 # Called every [x] milliseconds in order to refresh data in dashboard
@@ -37,6 +38,7 @@ def launch_drivers():
     exchanges.launch_vesper()
     exchanges.launch_88mph()
     exchanges.launch_solend()
+    exchanges.launch_fulcrum()
 
 launch_drivers()
 app.run()

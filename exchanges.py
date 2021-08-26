@@ -15,10 +15,11 @@ op.add_argument("headless")
 
 table = arb_table.table()
 
+# Scrapes data from protocols that lack sufficient APIs
 def get_body(url, num):
     driver = webdriver.Chrome(PATH, options=op)
     driver.get(url)
-    # Builds in lag to allow slower webpages to load before scraping occurs
+    # Builds in lag to allow slower webpages to load before scraping
     time.sleep(num)
     get_source = driver.page_source
     parser = BeautifulSoup(get_source, "lxml")
@@ -46,6 +47,7 @@ def launch_aave():
             borrow_cost = np.nan
         table.update_table(name, "Aave", borrow_cost, deposit_yield)
 
+# Access using Compound API
 def launch_compound():
     response = requests.get("https://api.compound.finance/api/v2/ctoken")
     json_data = response.json()
@@ -76,6 +78,7 @@ def launch_mangomarkets():
         borrow_cost = float(cols[4].text.replace("Borrow Interest", "").replace("%", ""))
         table.update_table(name, "Mango Markets", borrow_cost, deposit_yield)
 
+# Access using C.R.E.A.M. API
 def launch_cream():
     response = requests.get("https://api.cream.finance/api/v1/rates?comptroller=eth")
     json_data = response.json()
@@ -87,6 +90,7 @@ def launch_cream():
         deposit_yield = float(b["apy"]) * 100
         table.update_table(name, "C.R.E.A.M.", borrow_cost, deposit_yield)
 
+# Access using Vesper API
 def launch_vesper():
     response = requests.get("https://api.vesper.finance/loan-rates")
     json_data = response.json()
@@ -97,6 +101,7 @@ def launch_vesper():
         borrow_cost = np.nan
         table.update_table(name, "Vesper", borrow_cost, deposit_yield)
 
+# Access using 88mph API
 def launch_88mph():
     response = requests.get("https://api.88mph.app/pools")
     assets = response.json()
@@ -116,6 +121,20 @@ def launch_solend():
         borrow_cost = float(data_cols[5].text.replace("%", ""))
         deposit_yield = float(data_cols[3].text.replace("%", ""))
         table.update_table(name, "Soldend", borrow_cost, deposit_yield)
+
+# Access using Fulcrum API
+def launch_fulcrum():
+    response1 = requests.get("https://api.bzx.network/v1/supply-rate-apr?networks=eth")
+    response2 = requests.get("https://api.bzx.network/v1/borrow-rate-apr?networks=eth")
+    borrow_assets = response2.json()
+    borrow_assets = borrow_assets["data"]["eth"]
+    deposit_assets = response1.json()
+    deposit_assets = deposit_assets["data"]["eth"]
+    for a, b in zip(borrow_assets.keys(), deposit_assets.keys()):
+        name = a.upper()
+        borrow_cost = float(borrow_assets[a])
+        deposit_yield = float(deposit_assets[b])
+        table.update_table(name, "Fulcrum", borrow_cost, deposit_yield)
         
 def get_dict():
     return table.dict

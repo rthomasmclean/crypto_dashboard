@@ -3,6 +3,7 @@ import pandas as pd
 from bs4 import BeautifulSoup
 from selenium import webdriver
 import time
+import requests
 
 import arb_table
 
@@ -11,7 +12,6 @@ PATH = "/Users/reedthomas-mclean/Documents/chromedriver"
 op = webdriver.ChromeOptions()
 # "headless" argument runs Selenium driver without UI
 op.add_argument("headless")
-op.add_argument("window-size=1920,1080") # Needed for `click()`
 
 table = arb_table.table()
 
@@ -21,22 +21,6 @@ def get_body(url, num):
     # Builds in lag to allow slower webpages to load before scraping occurs
     time.sleep(num)
     get_source = driver.page_source
-    parser = BeautifulSoup(get_source, "lxml")
-    driver.close()
-    body = parser.body
-    return body
-
-# Functions as `get_body` but accounts for websites that require manual click
-def get_body_expand(url, num, button_class):
-    driver = webdriver.Chrome(PATH, options=op)
-    driver.get(url)
-    # Builds in lag to allow slower webpages to load before scraping occurs
-    time.sleep(num)
-    buttons = driver.find_elements_by_class_name(button_class)
-    # Expands the data that is visible to driver
-    for b in buttons:
-        b.click()
-    get_source = driver.page_source 
     parser = BeautifulSoup(get_source, "lxml")
     driver.close()
     body = parser.body
@@ -63,13 +47,13 @@ def launch_aave():
         table.update_table(name, "Aave", borrow_cost, deposit_yield)
 
 def launch_compound():
-    body = get_body("https://compound.finance/markets", 2)
-    assets = body.select(".asset")
-    for a in assets:
-        name = a.select(".symbol")[0].text
-        data_cols = a.select("div.col-xs-3")
-        deposit_yield = float(data_cols[1].find("div").text.replace("%", ""))
-        borrow_cost = float(data_cols[3].find("div").text.replace("%", ""))
+    response = requests.get("https://api.compound.finance/api/v2/ctoken")
+    json_data = response.json()
+    json_data = json_data["cToken"]
+    for a in json_data:
+        name = a["underlying_symbol"]
+        borrow_cost = float(a["borrow_rate"]["value"]) * 100
+        deposit_yield = float(a["supply_rate"]["value"]) * 100
         table.update_table(name, "Compound", borrow_cost, deposit_yield)
 
 def launch_solfarm():
@@ -93,43 +77,32 @@ def launch_mangomarkets():
         table.update_table(name, "Mango Markets", borrow_cost, deposit_yield)
 
 def launch_cream():
-    # Longer sleep time due to slow loading web page for C.R.E.A.M.
-    body = get_body_expand("https://app.cream.finance", 5, "sc-fIoroj")
-    borrow_assets = body.select(".rdt_TableBody")
-    borrow_assets = body.select(".rdt_TableBody")[1]
-    borrow_assets = borrow_assets.select(".rdt_TableRow")
-    deposit_assets = body.select(".rdt_TableBody")[0]
-    deposit_assets = deposit_assets.select(".rdt_TableRow")
-    # Loop accounts for separate borrow and lend tables on website
+    response = requests.get("https://api.cream.finance/api/v1/rates?comptroller=eth")
+    json_data = response.json()
+    borrow_assets = json_data["borrowRates"]
+    deposit_assets = json_data["lendRates"]
     for a, b in zip(borrow_assets, deposit_assets):
-        data_cols1 = a.select(".sc-eCImvq")
-        name = data_cols1[0].select(".sc-jlRMkV.ksCOFC")[0].text
-        borrow_cost = data_cols1[1].text
-        borrow_cost = float(borrow_cost.replace("%", ""))
-        data_cols2 = b.select(".sc-eCImvq")
-        deposit_yield = data_cols2[1].text
-        deposit_yield = float(deposit_yield.replace("%", ""))
+        name = a["tokenSymbol"]
+        borrow_cost = float(a["apy"]) * 100
+        deposit_yield = float(b["apy"]) * 100
         table.update_table(name, "C.R.E.A.M.", borrow_cost, deposit_yield)
 
 def launch_vesper():
-    body = get_body("https://app.vesper.finance/", 2)
-    assets = body.select("tbody")[0]
-    assets = assets.select("tbody")
+    response = requests.get("https://api.vesper.finance/loan-rates")
+    json_data = response.json()
+    assets = json_data["lendRates"]
     for a in assets:
-        name = a.select(".pl-2.align-middle.text-sm")[0].text
-        deposit_yield = a.select("div.flex.justify-end.text-xs.font-bold")[0].text.split("+")[0]
-        deposit_yield = float(deposit_yield.split()[1].replace("%", ""))
+        name = a["tokenSymbol"]
+        deposit_yield = float(a["apy"]) * 100
         borrow_cost = np.nan
         table.update_table(name, "Vesper", borrow_cost, deposit_yield)
 
 def launch_88mph():
-    # Longer sleep time due to slow loading web page for C.R.E.A.M.
-    body = get_body("https://88mph.app", 3)
-    assets = body.select("tbody.list")[0]
-    assets = assets.select("tr")
+    response = requests.get("https://api.88mph.app/pools")
+    assets = response.json()
     for a in assets:
-        name = a.select("td")[0].select(".font-weight-normal.mb-1")[0].text
-        deposit_yield = float(a.select("td")[3].text.replace("%", ""))
+        name = a["tokenSymbol"]
+        deposit_yield = float(a["mphAPY"])
         borrow_cost = np.nan
         table.update_table(name, "88mph", borrow_cost, deposit_yield)
 

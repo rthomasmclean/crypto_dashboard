@@ -27,24 +27,27 @@ def get_body(url, num):
     body = parser.body
     return body
 
+# Access using query on subgraph
 def launch_aave():
-    body = get_body("https://aave.com/", 2)
-    table_content_inner = body.select(".Table__content-inner")[0]
-    assets = table_content_inner.select(".TableItem__wrapper")
+    query = '''
+    {
+    reserves {
+        symbol
+        liquidityRate 
+        variableBorrowRate
+    }
+    }
+    '''
+    RAY = 10**27
+
+    request = requests.post("https://api.thegraph.com/subgraphs/name/aave/protocol-v2", 
+                            json={'query': query})
+    json_data = request.json()
+    assets = json_data["data"]["reserves"]
     for a in assets:
-        name = a.select(".TableItem__column")[0].find("img", alt=True)["alt"]
-        deposit_col = a.select(".TableItem__column")[3]
-        deposit_col = deposit_col.select(".APRValue")
-        if len(deposit_col) > 0:
-            deposit_yield = float(deposit_col[0].text.replace(" %", ""))
-        else:
-            deposit_yield = np.nan
-        borrow_col = a.select(".TableItem__column")[4]
-        borrow_col = borrow_col.select(".APRValue")
-        if len(borrow_col) > 0:
-            borrow_cost = float(borrow_col[0].text.replace(" %", ""))
-        else:
-            borrow_cost = np.nan
+        name = a["symbol"]
+        borrow_cost = 100 * int(a["variableBorrowRate"])/RAY
+        deposit_yield = 100 * int(a["liquidityRate"])/RAY    
         table.update_table(name, "Aave", borrow_cost, deposit_yield)
 
 # Access using Compound API
@@ -86,6 +89,8 @@ def launch_cream():
     deposit_assets = json_data["lendRates"]
     for a, b in zip(borrow_assets, deposit_assets):
         name = a["tokenSymbol"]
+        if name == "FTX Token":
+            name = "FTT"
         borrow_cost = float(a["apy"]) * 100
         deposit_yield = float(b["apy"]) * 100
         table.update_table(name, "C.R.E.A.M.", borrow_cost, deposit_yield)
@@ -112,12 +117,22 @@ def launch_88mph():
         table.update_table(name, "88mph", borrow_cost, deposit_yield)
 
 def launch_solend():
+    symbol_map = {
+        "Solana": "SOL",
+        "USDC": "USDC",
+        "Ethereum": "ETH",
+        "Bitcoin": "BTC",
+        "Serum": "SRM",
+        "USDT": "USDT",
+        "FTT": "FTT",
+        "Raydium": "RAY"
+    }
     body = get_body("https://solend.fi/dashboard", 2)
     assets = body.select("tbody.ant-table-tbody")[0]
     assets = assets.select("tr.ant-table-row")
     for a in assets:
         data_cols = a.select("td.ant-table-cell")
-        name = data_cols[0].select(".Typography_secondary__2P2Em")[0].text
+        name = symbol_map[data_cols[0].select(".Typography_primary__r-t61")[0].text]
         borrow_cost = float(data_cols[5].text.replace("%", ""))
         deposit_yield = float(data_cols[3].text.replace("%", ""))
         table.update_table(name, "Soldend", borrow_cost, deposit_yield)

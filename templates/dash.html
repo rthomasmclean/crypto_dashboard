@@ -48,9 +48,9 @@
                 <td>{{ data[asset]["Spread"][0] }}</td>
                 {% endif %}
             </tr>
-            <tr class="exchange_spec">
-                <td class="bottom"><a href={{ urls[data[asset]["Max Yield Exchange"][0]] }}>{{ data[asset]["Max Yield Exchange"][0] }}</a></td>
-                <td class="bottom"><a href={{ urls[data[asset]["Min Cost Exchange"][0]] }}>{{ data[asset]["Min Cost Exchange"][0] }}</a></td>
+            <tr class="exchange_tvl_spec">
+                <td class="bottom"><a href={{ urls[data[asset]["Max Yield Exchange"][0]] }}>{{ data[asset]["Max Yield Exchange"][0] }}</a> {{ data[asset]["Max Yield TVL"][0] }}</td>
+                <td class="bottom"><a href={{ urls[data[asset]["Min Cost Exchange"][0]] }}>{{ data[asset]["Min Cost Exchange"][0] }}</a> {{ data[asset]["Min Cost TVL"][0] }}</td>
                 <td class="bottom"></td>
             </tr>
         {% endfor %}

@@ -6,17 +6,14 @@ import requests
 
 import arb_table
 
-# PATH references where chromedriver is saved on PC
-PATH = "/Users/reedthomas-mclean/Documents/chromedriver"
 op = webdriver.ChromeOptions()
-# "headless" argument runs Selenium driver without UI
 op.add_argument("headless")
 
 table = arb_table.table()
 
 # Scrapes data from protocols that lack sufficient APIs
 def get_body(url, num):
-    driver = webdriver.Chrome(PATH, options=op)
+    driver = webdriver.Chrome(options=op)
     driver.get(url)
     # Builds in lag to allow slower webpages to load before scraping
     time.sleep(num)
@@ -46,10 +43,12 @@ def launch_aave():
         }
     }
     '''
-    # Aave's API returns data in terms of RAY units to reduce the impact of rounding errors
+    # Aave's API returns data in terms of RAY units to reduce the  
+    # impact of rounding errors
     RAY = 10**27
-    request = requests.post("https://api.thegraph.com/subgraphs/name/aave/protocol-v2", 
-                            json={'query': query})
+    request = requests.post(
+        "https://api.thegraph.com/subgraphs/name/aave/protocol-v2", 
+        json={'query': query})
     json_data = request.json()
     assets = json_data["data"]["reserves"]
     usd_eth = json_data["data"]["priceOracles"]
@@ -85,25 +84,29 @@ def launch_compound():
         usd_eth = eth_price_usd()
         # Underlying liquidity converted -> ETH -> USD
         tvl = underlying_liquidity * price * usd_eth
-        table.update_table(name, "Compound", borrow_cost, deposit_yield, tvl)
+        table.update_table(name, "Compound", borrow_cost, 
+                           deposit_yield, tvl)
 
 # Scrape data due to no functional API available
 def launch_solfarm():
     body = get_body("https://solfarm.io/lend", 2)
     assets = body.select(".lend-table__row ")
-    for a in assets:
-        name = a.select(".lend-table__row-item__asset__text")[0].text
-        data_cols = a.select(".lend-table__row-item__cell")
-        deposit_yield = float(data_cols[2].find("span").text.replace("%", ""))
-        borrow_cost = np.nan
-        tvl = data_cols[3].select(".lend-table__row-item__cell-usd")[0].text
-        tvl = tvl.replace("$", "").replace(",","")
-        if tvl[-1] == "M":
-            tvl = tvl.replace("M", "")
-            tvl = float(tvl) * 1000000
-        else:
-            tvl = float(tvl)
-        table.update_table(name, "Solfarm", borrow_cost, deposit_yield, tvl)
+    try:
+        for a in assets:
+            name = a.select(".lend-table__row-item__asset__text")[0].text
+            data_cols = a.select(".lend-table__row-item__cell")
+            deposit_yield = float(data_cols[2].find("span").text.replace("%", ""))
+            borrow_cost = np.nan
+            tvl = data_cols[3].select(".lend-table__row-item__cell-usd")[0].text
+            tvl = tvl.replace("$", "").replace(",","")
+            if tvl[-1] == "M":
+                tvl = tvl.replace("M", "")
+                tvl = float(tvl) * 1000000
+            else:
+                tvl = float(tvl)
+            table.update_table(name, "Solfarm", borrow_cost, deposit_yield, tvl)
+    except IndexError:
+        print("Error! Check for changes to the webpage HTML (https://solfarm.io/lend).")
 
 # Scrape data due to no functional API available
 def launch_mangomarkets():
@@ -118,19 +121,28 @@ def launch_mangomarkets():
         "SOL": "solana",
         "USDT": "tether",
         "SRM": "serum",
+        "RAY": "raydium",
+        "COPE": "cope"
     }
-    # Coingecko API allows us to convert collateral / liquidity of underlying token to USD
-    response = requests.get("https://api.coingecko.com/api/v3/simple/price?ids=usd-coin%2Cmango-markets%2Cbitcoin%2Cethereum%2Csolana%2Ctether%2Cserum&vs_currencies=usd")
+    # Coingecko API allows us to convert collateral / 
+    # liquidity of underlying token to USD
+    response = requests.get("https://api.coingecko.com/api/v3/simple/price?ids=usd-coin%2Cmango-markets%2Cbitcoin%2Cethereum%2Csolana%2Ctether%2Cserum%2Craydium%2Ccope&vs_currencies=usd")
     prices = response.json()
-    for a in assets:
-        cols = a.select("td")
-        name = cols[0].select(".flex")[0].text
-        deposit_yield = float(cols[3].text.replace("Deposit Interest", "").replace("%", ""))
-        borrow_cost = float(cols[4].text.replace("Borrow Interest", "").replace("%", ""))
-        tvl = float(cols[1].text.replace(",", ""))
-        price_usd = prices[API_map[name]]["usd"]
-        tvl = tvl * price_usd
-        table.update_table(name, "Mango Markets", borrow_cost, deposit_yield, tvl)
+    try:
+        for a in assets:
+            cols = a.select("td")
+            name = cols[0].select(".flex")[0].text
+            deposit_yield = float(cols[3].text.replace("Deposit Interest", "")
+                                            .replace("%", ""))
+            borrow_cost = float(cols[4].text.replace("Borrow Interest", "")
+                                            .replace("%", ""))
+            tvl = float(cols[1].text.replace(",", ""))
+            price_usd = prices[API_map[name]]["usd"]
+            tvl = tvl * price_usd
+            table.update_table(name, "Mango Markets", borrow_cost, 
+                            deposit_yield, tvl)
+    except KeyError:
+        print("Error! You must add new assets on platform to API_map & incorporate into API url (Mango Markets).")
 
 # Access using C.R.E.A.M. API / subgraph query
 def launch_cream():
@@ -145,7 +157,8 @@ def launch_cream():
             }
         }
         '''
-    response = requests.post("https://api.thegraph.com/subgraphs/name/creamfinancedev/cream-lending", json={"query": query})
+    response = requests.post("https://api.thegraph.com/subgraphs/name/creamfinancedev/cream-lending", 
+                              json={"query": query})
     json_data = response.json()
     assets = json_data["data"]["markets"]
     for a in assets:
@@ -154,8 +167,10 @@ def launch_cream():
             name = "FTT" # for consistency across platforms
         deposit_yield = float(a["supplyRate"]) * 100
         borrow_cost = float(a["borrowRate"]) * 100
-        tvl = float(a["cash"]) * float(a["underlyingPriceUSD"]) # Cash is the amount of underlying balance owned by this crToken contract
-        table.update_table(name, "C.R.E.A.M.", borrow_cost, deposit_yield, tvl)
+        # Cash is the underlying balance owned by crToken contract
+        tvl = float(a["cash"]) * float(a["underlyingPriceUSD"]) 
+        table.update_table(name, "C.R.E.A.M.", borrow_cost, 
+                            deposit_yield, tvl)
 
 # Access using Vesper API
 def launch_vesper():
@@ -196,19 +211,28 @@ def launch_solend():
         "Serum": "SRM",
         "USDT": "USDT",
         "FTT": "FTT",
-        "Raydium": "RAY"
+        "Raydium": "RAY",
+        "Saber": "SBR",
+        "Mercurial": "MER"
     }
-    body = get_body("https://solend.fi/dashboard", 2)
-    assets = body.select("tbody.ant-table-tbody")[0]
-    assets = assets.select("tr.ant-table-row")
-    for a in assets:
-        data_cols = a.select("td.ant-table-cell")
-        name = symbol_map[data_cols[0].select(".Typography_primary__r-t61")[0].text]
-        borrow_cost = float(data_cols[5].text.replace("%", ""))
-        deposit_yield = float(data_cols[3].text.replace("%", ""))
-        tvl = data_cols[1].select("label.Typography_secondary__2P2Em")[0].text
-        tvl = float(tvl.replace("$", "").replace(",", ""))
-        table.update_table(name, "Solend", borrow_cost, deposit_yield, tvl)
+    try:
+        body = get_body("https://solend.fi/dashboard", 2)
+        assets = body.select("tbody.ant-table-tbody")[0]
+        assets = assets.select("tr.ant-table-row")
+        for a in assets:
+            data_cols = a.select("td.ant-table-cell")
+            name = symbol_map[data_cols[0]
+                    .select(".Typography_primary__r-t61")[0].text]
+            borrow_cost = float(data_cols[5].text.replace("%", ""))
+            deposit_yield = float(data_cols[3].text.replace("%", ""))
+            tvl = data_cols[1].select("label.Typography_secondary__2P2Em") \
+                        [0].text
+            tvl = float(tvl.replace("$", "").replace(",", ""))
+            table.update_table(name, "Solend", borrow_cost, deposit_yield, tvl)
+    except KeyError:
+        print("Error! You must add new assets on platform to symbol_map (Solend).")
+    except IndexError:
+        print("Error! Check for changes to the webpage HTML (https://solend.fi/dashboard).")
 
 # Access using Fulcrum API
 def launch_fulcrum():
@@ -224,7 +248,8 @@ def launch_fulcrum():
     tvl_assets = tvl_assets["data"]["eth"]
     asset_prices_usd = response4.json()
     asset_prices_usd = asset_prices_usd["data"]["eth"]
-    for a, b, c, d in zip(borrow_assets.keys(), deposit_assets.keys(), tvl_assets.keys(), asset_prices_usd.keys()):
+    for a, b, c, d in zip(borrow_assets.keys(), deposit_assets.keys(), 
+                        tvl_assets.keys(), asset_prices_usd.keys()):
         name = a.upper()
         borrow_cost = float(borrow_assets[a])
         deposit_yield = float(deposit_assets[b])

@@ -20,13 +20,17 @@ exchange_urls = {
 @app.route("/update_dashboard", methods=["POST"])
 def updatedash():
     launch_drivers()
-    # Spreads are updated based on the refreshed data generated from `launch_drivers`
+    # Spreads are updated based on the refreshed data generated from 
+    # `launch_drivers`
     spreads = exchanges.get_spreads()
-    return jsonify("", render_template("update_dash.html", assets=exchanges.get_dict().keys(), data=spreads, urls=exchange_urls))
+    return jsonify("", render_template("update_dash.html", 
+                   assets=exchanges.get_dict().keys(), 
+                   data=spreads, urls=exchange_urls))
 
 @app.route("/")
 def home():
-    return render_template("dash.html", assets=exchanges.get_dict().keys(), data=exchanges.get_spreads(), urls=exchange_urls)
+    return render_template("dash.html", assets=exchanges.get_dict().keys(), 
+           data=exchanges.get_spreads(), urls=exchange_urls)
 
 # The following functions scrape relevant data from these platforms
 def launch_drivers():

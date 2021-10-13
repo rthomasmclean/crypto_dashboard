@@ -2,22 +2,19 @@ body {
   background-color: #a9a9a9;
 }
 
-h1 {
-  text-align: center;
-}
-
 table {
 	margin:20px;
   width:60%;
   margin-left: auto;
   margin-right: auto;
+  font-family: sans-serif;
 }
 
 table th {
 	padding:21px 25px 22px 25px;
 	/* border-top:1px solid #e0e0e0;
 	border-bottom:1px solid #e0e0e0; */
-  font-size:x-large;
+  font-size:large;
   background-color: #89ABE3FF;
   color: #FCF6F5FF;
 }
